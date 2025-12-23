@@ -1,0 +1,7 @@
+{
+  "name": "AI人臉統計網",
+  "description": "An intelligent web application that uses Gemini AI to detect, count, and mark people in uploaded photos with precision bounding boxes.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
