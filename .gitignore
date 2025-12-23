@@ -16,6 +16,9 @@ dist-ssr
 .env.production
 .env.development
 
+# 注意：package-lock.json 應該被提交到版本控制
+# 如果沒有此檔案，GitHub Actions 會自動使用 npm install
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
