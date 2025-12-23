@@ -5,9 +5,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
     // GitHub Pages 需要設置 base 路徑
-    // 檢查是否在 GitHub Actions 環境中
-    const isGitHubPages = process.env.GITHUB_PAGES === 'true' || process.env.GITHUB_ACTIONS === 'true';
-    const base = isGitHubPages ? '/Face-calculater/' : '/';
+    // 只有在明確設置 GITHUB_PAGES=true 時才使用 base 路徑
+    const base = process.env.GITHUB_PAGES === 'true' ? '/Face-calculater/' : '/';
     
     return {
       base,
