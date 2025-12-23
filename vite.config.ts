@@ -4,7 +4,11 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
+    // GitHub Pages 需要設置 base 路徑
+    const base = process.env.GITHUB_PAGES === 'true' ? '/Face-calculater/' : '/';
+    
     return {
+      base,
       server: {
         port: 3000,
         host: '0.0.0.0',
