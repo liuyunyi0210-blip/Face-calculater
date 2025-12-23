@@ -1,18 +1,25 @@
-name: Deploy to Production
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
       - main
-      - master
   workflow_dispatch:
 
+# 設置 GITHUB_TOKEN 權限以允許部署到 GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 只允許一個並發部署
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,8 +28,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          # 不使用 cache，因為可能沒有 package-lock.json
-          # 如果之後添加了 package-lock.json，可以改回 cache: 'npm'
       
       - name: Install dependencies
         run: |
@@ -46,7 +51,8 @@ jobs:
           echo "---"
           if [ -f dist/index.html ]; then
             echo "✅ index.html 存在"
-            head -20 dist/index.html
+            echo "檢查 index.html 內容："
+            head -30 dist/index.html
           else
             echo "❌ index.html 不存在！"
             exit 1
@@ -54,16 +60,28 @@ jobs:
           echo "---"
           if [ -d dist/assets ]; then
             echo "✅ assets 資料夾存在"
+            echo "檔案列表："
             ls -la dist/assets/ | head -10
           else
             echo "⚠️ assets 資料夾不存在"
           fi
       
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: github.ref == 'refs/heads/main'
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          cname: false
+          path: './dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
