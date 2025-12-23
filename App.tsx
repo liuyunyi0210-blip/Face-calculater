@@ -88,8 +88,14 @@ const App: React.FC = () => {
     try {
       const result = await detectPeople(imageState.base64);
       setPeople(result.people);
+      if (result.people.length === 0) {
+        setError("未偵測到任何人臉，請確認照片中有清楚的人臉影像。");
+      }
     } catch (err: any) {
-      setError("影像分析失敗，請檢查網路連線或嘗試更換照片。");
+      // 使用服務層提供的詳細錯誤訊息
+      const errorMessage = err?.message || "影像分析失敗，請檢查網路連線或嘗試更換照片。";
+      setError(errorMessage);
+      console.error("辨識錯誤:", err);
     } finally {
       setIsAnalyzing(false);
     }
@@ -149,6 +155,32 @@ const App: React.FC = () => {
               >
                 {isAnalyzing ? "正在 AI 辨識中..." : "開始辨識與統計"}
               </button>
+              
+              {error && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 flex-shrink-0 mt-0.5">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-red-900 mb-1">錯誤</p>
+                      <p className="text-xs text-red-700">{error}</p>
+                    </div>
+                    <button
+                      onClick={() => setError(null)}
+                      className="text-red-400 hover:text-red-600 transition-colors"
+                      aria-label="關閉錯誤訊息"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
