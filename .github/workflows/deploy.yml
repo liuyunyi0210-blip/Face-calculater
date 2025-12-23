@@ -39,6 +39,26 @@ jobs:
           GITHUB_PAGES: 'true'
         run: npm run build
       
+      - name: Verify build output
+        run: |
+          echo "檢查構建產物..."
+          ls -la dist/
+          echo "---"
+          if [ -f dist/index.html ]; then
+            echo "✅ index.html 存在"
+            head -20 dist/index.html
+          else
+            echo "❌ index.html 不存在！"
+            exit 1
+          fi
+          echo "---"
+          if [ -d dist/assets ]; then
+            echo "✅ assets 資料夾存在"
+            ls -la dist/assets/ | head -10
+          else
+            echo "⚠️ assets 資料夾不存在"
+          fi
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main'
