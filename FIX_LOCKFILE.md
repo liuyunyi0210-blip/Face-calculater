@@ -2,17 +2,20 @@
 
 ## 問題說明
 
-GitHub Actions 報錯：`Dependencies lock file is not found`
+GitHub Actions 報錯：`Dependencies lock file is not found in /home/runner/work/Face-calculater/Face-calculater. Supported file patterns: package-lock.json,npm-shrinkwrap.json,yarn.lock`
 
-這是因為專案缺少 `package-lock.json` 檔案。
+這是因為：
+1. 專案缺少 `package-lock.json` 檔案
+2. GitHub Actions 的 `cache: 'npm'` 配置需要 lockfile 才能運作
 
-## ✅ 解決方案（已自動修復）
+## ✅ 解決方案（已修復）
 
-我已經更新了 GitHub Actions 配置，現在它會：
-- 如果有 `package-lock.json`，使用 `npm ci`（更快、更可靠）
-- 如果沒有，自動使用 `npm install`（會生成鎖定檔案）
+我已經更新了 GitHub Actions 配置：
+- ✅ **移除了 `cache: 'npm'` 配置**（這是導致錯誤的主要原因）
+- ✅ 添加了條件判斷：如果有 `package-lock.json` 使用 `npm ci`，否則使用 `npm install`
+- ✅ 現在可以在沒有 lockfile 的情況下正常執行
 
-**您現在可以直接推送，GitHub Actions 會自動處理！**
+**您現在可以直接推送，GitHub Actions 會正常執行！**
 
 ## 📋 最佳實踐（可選）
 
