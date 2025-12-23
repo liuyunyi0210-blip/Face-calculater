@@ -4,8 +4,19 @@ import { DetectionResult, Department } from "../types";
 
 // 驗證 API 金鑰是否存在
 const getApiKey = (): string => {
-  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  // 在瀏覽器環境中，環境變數是通過 Vite 的 define 注入的
+  // 需要使用 import.meta.env 或 window 對象來訪問
+  const apiKey = (import.meta.env?.VITE_GEMINI_API_KEY || 
+                  (window as any).__GEMINI_API_KEY__ ||
+                  process.env.API_KEY || 
+                  process.env.GEMINI_API_KEY);
+  
+  if (!apiKey || apiKey === '') {
+    console.error("API 金鑰未找到。環境變數:", {
+      VITE_GEMINI_API_KEY: import.meta.env?.VITE_GEMINI_API_KEY,
+      API_KEY: process.env.API_KEY,
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY
+    });
     throw new Error("GEMINI_API_KEY 環境變數未設定。請確認已正確配置 API 金鑰。");
   }
   return apiKey;
@@ -36,6 +47,12 @@ export const detectPeople = async (base64Image: string): Promise<DetectionResult
     // 驗證輸入
     validateBase64Image(base64Image);
     const apiKey = getApiKey();
+    
+    if (!apiKey || apiKey === '') {
+      throw new Error("API 金鑰未設定，無法進行辨識");
+    }
+    
+    console.log("使用 API 金鑰進行辨識，金鑰長度:", apiKey.length);
     
     const ai = new GoogleGenAI({ apiKey });
     
@@ -131,21 +148,26 @@ export const detectPeople = async (base64Image: string): Promise<DetectionResult
       people: validPeople
     };
   } catch (error: any) {
+    console.error("Gemini API 錯誤:", error);
+    
     // 處理特定錯誤類型
-    if (error.message?.includes('API key')) {
+    if (error.message?.includes('API key') || error.message?.includes('API_KEY')) {
       throw new Error("API 金鑰設定錯誤，請檢查環境變數配置");
     }
     if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
       throw new Error("API 使用配額已達上限，請稍後再試");
     }
-    if (error.message?.includes('network') || error.message?.includes('fetch')) {
-      throw new Error("網路連線錯誤，請檢查網路連線後重試");
+    if (error.message?.includes('network') || error.message?.includes('fetch') || error.message?.includes('Load failed')) {
+      throw new Error("網路連線錯誤，請檢查網路連線後重試。如果問題持續，可能是 API 金鑰未正確設定。");
+    }
+    if (error.message?.includes('CORS') || error.message?.includes('cors')) {
+      throw new Error("跨域請求錯誤，請檢查 API 設定");
     }
     // 重新拋出已處理的錯誤
     if (error.message) {
       throw error;
     }
     // 未知錯誤
-    throw new Error("辨識過程中發生錯誤，請稍後再試");
+    throw new Error(`辨識過程中發生錯誤：${error.toString()}。請稍後再試。`);
   }
 };
