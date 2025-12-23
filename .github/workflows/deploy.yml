@@ -19,13 +19,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+          # 不使用 cache，因為可能沒有 package-lock.json
+          # 如果之後添加了 package-lock.json，可以改回 cache: 'npm'
       
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then
             npm ci
           else
+            echo "未找到 package-lock.json，使用 npm install"
             npm install
           fi
       
