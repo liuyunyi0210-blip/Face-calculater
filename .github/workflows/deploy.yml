@@ -42,7 +42,16 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_PAGES: 'true'
-        run: npm run build
+        run: |
+          echo "檢查環境變數..."
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "❌ 錯誤：GEMINI_API_KEY 環境變數未設置！"
+            echo "請確認 GitHub Secrets 中已設置 GEMINI_API_KEY"
+            exit 1
+          else
+            echo "✅ GEMINI_API_KEY 已設置（長度: ${#GEMINI_API_KEY}）"
+          fi
+          npm run build
       
       - name: Verify build output
         run: |
