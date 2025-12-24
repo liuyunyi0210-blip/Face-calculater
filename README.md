@@ -1,12 +1,6 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 # AI 人臉統計網
 
 一個使用 Google Gemini AI 進行人臉辨識與統計的網頁應用程式，可自動辨識團體照片中的人數並分類統計。
-
-View your app in AI Studio: https://ai.studio/apps/drive/12OMhcxLHzkxBr89kC4zyTy0SbC26gVV2
 
 ## 功能特色
 
