@@ -11,13 +11,13 @@ const getApiKey = (): string => {
                   process.env.API_KEY || 
                   process.env.GEMINI_API_KEY);
   
-  if (!apiKey || apiKey === '') {
+  if (!apiKey || apiKey === '' || apiKey === 'undefined' || apiKey === 'null') {
     console.error("API 金鑰未找到。環境變數:", {
       VITE_GEMINI_API_KEY: import.meta.env?.VITE_GEMINI_API_KEY,
       API_KEY: process.env.API_KEY,
       GEMINI_API_KEY: process.env.GEMINI_API_KEY
     });
-    throw new Error("GEMINI_API_KEY 環境變數未設定。請確認已正確配置 API 金鑰。");
+    throw new Error("API 金鑰未設定。請確認：1) GitHub Secrets 中已設置 GEMINI_API_KEY 2) 已重新部署網站");
   }
   return apiKey;
 };
@@ -151,22 +151,39 @@ export const detectPeople = async (base64Image: string): Promise<DetectionResult
     console.error("Gemini API 錯誤:", error);
     
     // 處理特定錯誤類型
-    if (error.message?.includes('API key') || error.message?.includes('API_KEY')) {
-      throw new Error("API 金鑰設定錯誤，請檢查環境變數配置");
+    const errorMsg = error.message || error.toString() || '';
+    const errorStr = errorMsg.toLowerCase();
+    
+    // API 金鑰相關錯誤
+    if (errorStr.includes('api key') || errorStr.includes('api_key') || errorStr.includes('authentication') || errorStr.includes('unauthorized') || errorStr.includes('401')) {
+      throw new Error("API 金鑰設定錯誤或無效。請檢查：1) GitHub Secrets 中的 GEMINI_API_KEY 是否正確 2) API 金鑰是否有效");
     }
-    if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
-      throw new Error("API 使用配額已達上限，請稍後再試");
+    
+    // 配額相關錯誤
+    if (errorStr.includes('quota') || errorStr.includes('rate limit') || errorStr.includes('429') || errorStr.includes('resource exhausted')) {
+      throw new Error("API 使用配額已達上限。免費配額可能已用完，請稍後再試或檢查 Google AI Studio 的配額狀態");
     }
-    if (error.message?.includes('network') || error.message?.includes('fetch') || error.message?.includes('Load failed')) {
-      throw new Error("網路連線錯誤，請檢查網路連線後重試。如果問題持續，可能是 API 金鑰未正確設定。");
+    
+    // 網絡相關錯誤
+    if (errorStr.includes('network') || errorStr.includes('fetch') || errorStr.includes('load failed') || errorStr.includes('failed to fetch')) {
+      throw new Error("網路連線錯誤，請檢查網路連線後重試");
     }
-    if (error.message?.includes('CORS') || error.message?.includes('cors')) {
+    
+    // CORS 錯誤
+    if (errorStr.includes('cors') || errorStr.includes('cross-origin')) {
       throw new Error("跨域請求錯誤，請檢查 API 設定");
     }
+    
+    // 服務不可用
+    if (errorStr.includes('503') || errorStr.includes('service unavailable') || errorStr.includes('unavailable')) {
+      throw new Error("API 服務暫時不可用，請稍後再試");
+    }
+    
     // 重新拋出已處理的錯誤
     if (error.message) {
       throw error;
     }
+    
     // 未知錯誤
     throw new Error(`辨識過程中發生錯誤：${error.toString()}。請稍後再試。`);
   }
